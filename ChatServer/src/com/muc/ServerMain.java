@@ -16,7 +16,7 @@ public class ServerMain {
                 System.out.println("About to accept client connection");
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Accept connection from " + clientSocket);
-                Thread t = new Thread() {
+                new Thread() {
                   public void run() {
                       try {
                           handleClientSocket(clientSocket);
@@ -26,8 +26,7 @@ public class ServerMain {
                           e.printStackTrace();
                       }
                   }
-                };
-                t.start();
+                }.start();
             }
         }catch (IOException e) {
             e.printStackTrace();
