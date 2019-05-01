@@ -29,11 +29,16 @@ public class ServerWorker extends Thread {
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         String line;
         while ((line = reader.readLine()) != null) {
-            if ("quit()".equalsIgnoreCase(line) || "exit()".equalsIgnoreCase(line)) {
-                break;
+            String[] tokens = line.split(" ");
+            if (tokens != null && tokens.length > 0) {
+                String cmd = tokens[0];
+                if ("quit()".equalsIgnoreCase(line) || "exit()".equalsIgnoreCase(line)) {
+                    break;
+                }else {
+                    String msg = "unknown " + cmd + "\n";
+                    outputStream.write(msg.getBytes());
+                }
             }
-            String msg = "You typed " + line + "\n";
-            outputStream.write(msg.getBytes());
         }
 
         inputStream.close();outputStream.close();clientSocket.close();

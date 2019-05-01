@@ -13,3 +13,7 @@ User & Server
 
     * direct messages
     * broadcast messages
+
+Commands:
+
+    login
