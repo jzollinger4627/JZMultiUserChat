@@ -32,7 +32,7 @@ public class ServerWorker extends Thread {
             String[] tokens = line.split(" ");
             if (tokens != null && tokens.length > 0) {
                 String cmd = tokens[0];
-                if ("quit()".equalsIgnoreCase(line) || "exit()".equalsIgnoreCase(line)) {
+                if ("quit".equalsIgnoreCase(line) || "exit".equalsIgnoreCase(line)) {
                     break;
                 }else {
                     String msg = "unknown " + cmd + "\n";
