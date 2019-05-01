@@ -16,8 +16,8 @@ public class ServerMain {
                 System.out.println("About to accept client connection");
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Accept connection from " + clientSocket);
-                ServerWorker Worker = new ServerWorker(clientSocket);
-                Worker.start();
+                ServerWorker worker = new ServerWorker(clientSocket);
+                worker.start();
             }
         }catch (IOException e) {
             e.printStackTrace();
