@@ -32,8 +32,10 @@ public class ServerWorker extends Thread {
             String[] tokens = line.split(" ");
             if (tokens != null && tokens.length > 0) {
                 String cmd = tokens[0];
-                if ("quit".equalsIgnoreCase(line) || "exit".equalsIgnoreCase(line)) {
+                if ("quit".equalsIgnoreCase(cmd) || "exit".equalsIgnoreCase(cmd)) {
                     break;
+                }else if ("login".equalsIgnoreCase(cmd)) {
+                    handleLogin(outputStream, tokens);
                 }else {
                     String msg = "unknown " + cmd + "\n";
                     outputStream.write(msg.getBytes());
@@ -42,6 +44,10 @@ public class ServerWorker extends Thread {
         }
 
         inputStream.close();outputStream.close();clientSocket.close();
+    }
+
+    private void handleLogin(OutputStream outputStream, String[] tokens) {
+        
     }
 
 }
