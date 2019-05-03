@@ -2,14 +2,19 @@ package com.muc;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ServerWorker extends Thread {
 
     private final Socket clientSocket;
+    private final Server server;
+    private String login = null;
+    private OutputStream outputStream;
 
-    public ServerWorker(Socket clientSocket) {
+    public ServerWorker(Server server, Socket clientSocket) {
         this.clientSocket = clientSocket;
+        this.server = server;
     }
 
     public void run() {
@@ -24,7 +29,7 @@ public class ServerWorker extends Thread {
 
     private void handleClientSocket() throws IOException, InterruptedException {
         InputStream inputStream = clientSocket.getInputStream();
-        OutputStream outputStream = clientSocket.getOutputStream();
+        outputStream = clientSocket.getOutputStream();
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         String line;
@@ -33,21 +38,61 @@ public class ServerWorker extends Thread {
             if (tokens != null && tokens.length > 0) {
                 String cmd = tokens[0];
                 if ("quit".equalsIgnoreCase(cmd) || "exit".equalsIgnoreCase(cmd)) {
+                    ArrayList<ServerWorker> workerList = (ArrayList<ServerWorker>) server.getWorkerList();
+                    workerList.remove(this);
+                    String onlineMsg = "Offline " + login + "\n";
+                    server.setWorkerList(workerList);
+                    for (ServerWorker worker: workerList) {
+                        if (worker != this) {
+                            worker.send(onlineMsg);
+                        }
+                    }
                     break;
                 }else if ("login".equalsIgnoreCase(cmd)) {
-                    handleLogin(outputStream, tokens);
+                    handleLogin(tokens);
                 }else {
-                    String msg = "unknown " + cmd + "\n";
-                    outputStream.write(msg.getBytes());
+                    String msg = "Unknown Command: " + cmd + "\n";
+                    send(msg);
                 }
             }
         }
-
+        System.out.println("Disconnected: " + clientSocket.getInetAddress().toString().substring(1));
         inputStream.close();outputStream.close();clientSocket.close();
     }
 
-    private void handleLogin(OutputStream outputStream, String[] tokens) {
-        
+    public String getLogin() {
+        return login;
+    }
+
+    private void handleLogin(String[] tokens) throws IOException{
+        if (tokens.length == 3) {
+            String login = tokens[1];
+            String password = tokens[2];
+            if ((login.equals("guest") && password.equals("guest") || (login.equals("jacob") && password.equals("101806360")))) {
+                String msg = "ok login \n";
+                send(msg);
+                this.login = login;
+                System.out.println("User logged in successfully: " + login);
+
+                String onlineMsg = "online " + login + "\n";
+                List<ServerWorker> workerList = server.getWorkerList();
+                for (ServerWorker worker: workerList) {
+                    if (worker != this) {
+                        worker.send(onlineMsg);
+                    }
+                }
+            }else {
+                String msg = "Unknown Login \n";
+                send(msg);
+            }
+        }else {
+            String msg = "Invalid Use of Login: (login Username Password) \n";
+            send(msg);
+        }
+    }
+
+    private void send(String msg) throws IOException {
+        outputStream.write(msg.getBytes());
     }
 
 }
