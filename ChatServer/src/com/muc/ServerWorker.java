@@ -37,16 +37,8 @@ public class ServerWorker extends Thread {
             String[] tokens = line.split(" ");
             if (tokens != null && tokens.length > 0) {
                 String cmd = tokens[0];
-                if ("quit".equalsIgnoreCase(cmd) || "exit".equalsIgnoreCase(cmd)) {
-                    ArrayList<ServerWorker> workerList = (ArrayList<ServerWorker>) server.getWorkerList();
-                    workerList.remove(this);
-                    String onlineMsg = "Offline " + login + "\n";
-                    server.setWorkerList(workerList);
-                    for (ServerWorker worker: workerList) {
-                        if (worker != this) {
-                            worker.send(onlineMsg);
-                        }
-                    }
+                if ("quit".equalsIgnoreCase(cmd) || "exit".equalsIgnoreCase(cmd) || "logoff".equalsIgnoreCase(cmd)) {
+                    handleLogoff();
                     break;
                 }else if ("login".equalsIgnoreCase(cmd)) {
                     handleLogin(tokens);
@@ -56,8 +48,20 @@ public class ServerWorker extends Thread {
                 }
             }
         }
-        System.out.println("Disconnected: " + clientSocket.getInetAddress().toString().substring(1));
+        System.out.println("Disconnected: " + clientSocket.getInetAddress().toString().substring(1)+":"+clientSocket.getLocalPort());
         inputStream.close();outputStream.close();clientSocket.close();
+    }
+
+    private void handleLogoff() throws IOException {
+        ArrayList<ServerWorker> workerList = (ArrayList<ServerWorker>) server.getWorkerList();
+        workerList.remove(this);
+        String onlineMsg = "Offline " + login + "\n";
+        server.setWorkerList(workerList);
+        for (ServerWorker worker: workerList) {
+            if (worker != this) {
+                worker.send(onlineMsg);
+            }
+        }
     }
 
     public String getLogin() {
@@ -76,7 +80,16 @@ public class ServerWorker extends Thread {
 
                 String onlineMsg = "online " + login + "\n";
                 List<ServerWorker> workerList = server.getWorkerList();
-                for (ServerWorker worker: workerList) {
+
+                for (ServerWorker worker: workerList) { //letting you know who's online
+                    if (worker.getLogin() != null && worker != this) {
+                        String msg2 = "online " + worker.getLogin() + "\n";
+                        send(msg2);
+                    }
+
+                }
+
+                for (ServerWorker worker: workerList) { //letting other know you're online
                     if (worker != this) {
                         worker.send(onlineMsg);
                     }
@@ -93,6 +106,7 @@ public class ServerWorker extends Thread {
 
     private void send(String msg) throws IOException {
         outputStream.write(msg.getBytes());
+
     }
 
 }
