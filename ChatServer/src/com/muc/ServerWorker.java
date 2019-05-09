@@ -98,7 +98,7 @@ public class ServerWorker extends Thread {
             int counter = 0;
             for (ServerWorker worker: server.getWorkerList()) {
                 if (isTopic) {
-                    if (worker.isMemberOfTopic(sendTo)) {
+                    if (worker.isMemberOfTopic(sendTo) && worker != this) {
                         String outMsg = "msg<"+sendTo+","+login+">: " + msg;
                         worker.send(outMsg);
                         counter++;
