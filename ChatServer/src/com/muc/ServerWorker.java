@@ -42,22 +42,49 @@ public class ServerWorker extends Thread {
                     break;
                 }else if ("login".equalsIgnoreCase(cmd)) {
                     handleLogin(tokens);
+                }else if ("msg".equalsIgnoreCase(cmd)) {
+                    handleMessage(tokens);
                 }else {
                     String msg = "Unknown Command: " + cmd + "\n";
                     send(msg);
                 }
             }
         }
-        System.out.println("Disconnected: " + clientSocket.getInetAddress().toString().substring(1)+":"+clientSocket.getLocalPort());
+        System.out.println("Disconnected: " + clientSocket.getInetAddress().toString().substring(1)+":"+clientSocket.getPort());
         inputStream.close();outputStream.close();clientSocket.close();
     }
 
+    //format: "msg" "user" msg....
+    private void handleMessage(String[] tokens) throws IOException {
+        if (tokens.length >= 3) {
+            String sendTo = tokens[1];
+            String msg = "";
+            for (int i=2;i<tokens.length;i++) {
+                msg = msg + tokens[i] + " ";
+            }
+            msg = msg + "\n";
+
+            int counter = 0;
+            for (ServerWorker worker: server.getWorkerList()) {
+                if (sendTo.equalsIgnoreCase(worker.getLogin())) {
+                    String outMsg = "msg<"+this.getLogin()+">: "+msg;
+                    worker.send(outMsg);
+                    counter++;
+                }
+            }
+            if (counter == 0) {
+                outputStream.write("User is offline\n".getBytes());
+            }
+        }else {
+            outputStream.write("Invalid use of msg: (msg User text)\n".getBytes());
+        }
+    }
+
     private void handleLogoff() throws IOException {
-        ArrayList<ServerWorker> workerList = (ArrayList<ServerWorker>) server.getWorkerList();
-        workerList.remove(this);
+        server.removeWorker(this);
+
         String onlineMsg = "Offline " + login + "\n";
-        server.setWorkerList(workerList);
-        for (ServerWorker worker: workerList) {
+        for (ServerWorker worker: server.getWorkerList()) {
             if (worker != this) {
                 worker.send(onlineMsg);
             }

@@ -16,4 +16,9 @@ User & Server
 
 Commands:
 
-    login
+    login <user> <password>
+    logoff
+
+    msg <user> text....
+    guest "msg jacob Hello World" <-- sent
+    jim: "msg guest Hello World" <--recv
