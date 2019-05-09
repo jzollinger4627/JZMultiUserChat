@@ -2,7 +2,7 @@ package com.muc;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public class ServerWorker extends Thread {
@@ -11,6 +11,7 @@ public class ServerWorker extends Thread {
     private final Server server;
     private String login = null;
     private OutputStream outputStream;
+    private HashSet<String> topicSet = new HashSet<String>();
 
     public ServerWorker(Server server, Socket clientSocket) {
         this.clientSocket = clientSocket;
@@ -40,11 +41,15 @@ public class ServerWorker extends Thread {
                 if ("quit".equalsIgnoreCase(cmd) || "exit".equalsIgnoreCase(cmd) || "logoff".equalsIgnoreCase(cmd)) {
                     handleLogoff();
                     break;
-                }else if ("login".equalsIgnoreCase(cmd)) {
+                } else if ("login".equalsIgnoreCase(cmd)) {
                     handleLogin(tokens);
-                }else if ("msg".equalsIgnoreCase(cmd)) {
+                } else if ("msg".equalsIgnoreCase(cmd)) {
                     handleMessage(tokens);
-                }else {
+                } else if ("join".equalsIgnoreCase(cmd)) {
+                    handleJoin(tokens);
+                } else if ("leave".equalsIgnoreCase(cmd)) {
+                    handleLeave(tokens);
+                } else {
                     String msg = "Unknown Command: " + cmd + "\n";
                     send(msg);
                 }
@@ -54,7 +59,31 @@ public class ServerWorker extends Thread {
         inputStream.close();outputStream.close();clientSocket.close();
     }
 
+    private void handleLeave(String[] tokens) throws IOException {
+        if (tokens.length == 2) {
+            String topic = tokens[1];
+            topicSet.remove(topic);
+        }else {
+            outputStream.write("Invalid use of join: (leave #topic)\n".getBytes());
+        }
+    }
+
+    public boolean isMemberOfTopic(String topic) {
+        return topicSet.contains(topic);
+    }
+
+
+    private void handleJoin(String[] tokens) throws IOException {
+        if (tokens.length == 2) {
+            String topic = tokens[1];
+            topicSet.add(topic);
+        }else {
+            outputStream.write("Invalid use of join: (join #topic)\n".getBytes());
+        }
+    }
+
     //format: "msg" "user" msg....
+    //format: "msg" "#topic" msg....
     private void handleMessage(String[] tokens) throws IOException {
         if (tokens.length >= 3) {
             String sendTo = tokens[1];
@@ -64,16 +93,33 @@ public class ServerWorker extends Thread {
             }
             msg = msg + "\n";
 
+            boolean isTopic = sendTo.charAt(0) == '#';
+
             int counter = 0;
             for (ServerWorker worker: server.getWorkerList()) {
-                if (sendTo.equalsIgnoreCase(worker.getLogin())) {
-                    String outMsg = "msg<"+this.getLogin()+">: "+msg;
-                    worker.send(outMsg);
-                    counter++;
+                if (isTopic) {
+                    if (worker.isMemberOfTopic(sendTo)) {
+                        String outMsg = "msg<"+sendTo+","+login+">: " + msg;
+                        worker.send(outMsg);
+                        counter++;
+                    }
+                }else {
+                    if (sendTo.equalsIgnoreCase(worker.getLogin())) {
+                        String outMsg = "msg<"+login+">: " + msg;
+                        worker.send(outMsg);
+                        counter++;
+                    }
                 }
+
             }
-            if (counter == 0) {
-                outputStream.write("User is offline\n".getBytes());
+            if (isTopic) {
+                if (counter == 0) {
+                    outputStream.write(("No one is on topic "+sendTo+"\n").getBytes());
+                }
+            }else {
+                if (counter == 0) {
+                    outputStream.write("User is offline\n".getBytes());
+                }
             }
         }else {
             outputStream.write("Invalid use of msg: (msg User text)\n".getBytes());
@@ -100,7 +146,7 @@ public class ServerWorker extends Thread {
             String login = tokens[1];
             String password = tokens[2];
             if ((login.equals("guest") && password.equals("guest") || (login.equals("jacob") && password.equals("101806360")))) {
-                String msg = "ok login \n";
+                String msg = "ok login\n";
                 send(msg);
                 this.login = login;
                 System.out.println("User logged in successfully: " + login);

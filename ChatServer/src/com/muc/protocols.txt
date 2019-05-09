@@ -12,7 +12,7 @@ User & Server
 3. User --> User
 
     * direct messages
-    * broadcast messages
+    * broadcast messages / group messaging
 
 Commands:
 
@@ -22,3 +22,8 @@ Commands:
     msg <user> text....
     guest "msg jacob Hello World" <-- sent
     jim: "msg guest Hello World" <--recv
+
+    #topic <-- chatroom / group chat
+    join #topic
+    leave #topic
+    msg #topic body...
