@@ -145,7 +145,7 @@ public class ServerWorker extends Thread {
         if (tokens.length == 3) {
             String login = tokens[1];
             String password = tokens[2];
-            if ((login.equals("guest") && password.equals("guest") || (login.equals("jacob") && password.equals("101806360")))) {
+            if ((login.equals("guest") && password.equals("guest") || (login.equals("jacob") && password.equals("jacob")))) {
                 String msg = "ok login\n";
                 send(msg);
                 this.login = login;
@@ -170,6 +170,7 @@ public class ServerWorker extends Thread {
             }else {
                 String msg = "Unknown Login \n";
                 send(msg);
+                System.err.println("Login failed for " + login);
             }
         }else {
             String msg = "Invalid Use of Login: (login Username Password) \n";
