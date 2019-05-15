@@ -14,6 +14,7 @@ public class ChatClient {
     private BufferedReader bufferedIn;
 
     private ArrayList<UserStatusListener> userStatusListeners = new ArrayList<UserStatusListener>();
+    private ArrayList<MessageListener> messageListeners = new ArrayList<MessageListener>();
 
     public ChatClient(String IPAddress, int port) {
         this.IPAddress = IPAddress;
@@ -33,17 +34,37 @@ public class ChatClient {
                 System.out.println("OFFLINE: " + login);
             }
         });
+        client.addMessageListener(new MessageListener() {
+            @Override
+            public void onMessage(String fromLogin, String msg) {
+                System.out.println("msg<"+ fromLogin + ">: " + msg);
+            }
+        });
         if (!client.connect()) {
             System.err.println("Connect failed.");
         }else {
             System.out.println("Connect successfull");
             if (client.login("guest", "guest")) {
                 System.out.println("Login successful");
+
+                client.msg("jacob", "Hello World!");
             }else {
                 System.err.println("Login failed");
             }
+
+            client.logoff();
         }
 
+    }
+
+    private void msg(String sendTo, String msg) throws IOException {
+        String cmd = "msg " + sendTo + " " + msg + "\n";
+        serverOut.write(cmd.getBytes());
+    }
+
+    private void logoff() throws IOException {
+        String cmd = "logoff\n";
+        serverOut.write(cmd.getBytes());
     }
 
     private boolean login(String username, String password) throws IOException {
@@ -129,4 +150,13 @@ public class ChatClient {
     public void removeUserStatusLister(UserStatusListener listener) {
         userStatusListeners.remove(listener);
     }
+
+    public void addMessageListener(MessageListener listener) {
+        messageListeners.add(listener);
+    }
+
+    public void removeMessageListener(MessageListener listener) {
+        messageListeners.remove(listener);
+    }
+
 }
