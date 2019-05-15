@@ -52,7 +52,7 @@ public class ChatClient {
                 System.err.println("Login failed");
             }
 
-            client.logoff();
+            //client.logoff();
         }
 
     }
@@ -103,6 +103,13 @@ public class ChatClient {
                         handleOnline(tokens);
                     } else if ("offline".equalsIgnoreCase(cmd)) {
                         handleOffline(tokens);
+                    } else if ("msg".equalsIgnoreCase(cmd)) {
+                        String msg = "";
+                        for (int i=2;i<tokens.length;i++) {
+                            msg = msg + tokens[i] + " ";
+                        }
+                        tokens[2] = msg;
+                        handleMessage(tokens);
                     }
                 }
             }
@@ -113,6 +120,15 @@ public class ChatClient {
             }catch (IOException ex) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void handleMessage(String[] tokens) {
+        String login = tokens[1];
+        String msg = tokens[2];
+
+        for (MessageListener listener: messageListeners) {
+            listener.onMessage(login, msg);
         }
     }
 
