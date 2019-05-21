@@ -57,17 +57,17 @@ public class ChatClient {
 
     }
 
-    private void msg(String sendTo, String msg) throws IOException {
+    public void msg(String sendTo, String msg) throws IOException {
         String cmd = "msg " + sendTo + " " + msg + "\n";
         serverOut.write(cmd.getBytes());
     }
 
-    private void logoff() throws IOException {
+    public void logoff() throws IOException {
         String cmd = "logoff\n";
         serverOut.write(cmd.getBytes());
     }
 
-    private boolean login(String username, String password) throws IOException {
+    public boolean login(String username, String password) throws IOException {
         String cmd = "login " + username + " " + password + "\n";
         serverOut.write(cmd.getBytes());
 
@@ -103,7 +103,7 @@ public class ChatClient {
                         handleOnline(tokens);
                     } else if ("offline".equalsIgnoreCase(cmd)) {
                         handleOffline(tokens);
-                    } else if ("msg".equalsIgnoreCase(cmd)) {
+                    } else if (cmd.startsWith("msg")) {
                         String msg = "";
                         for (int i=2;i<tokens.length;i++) {
                             msg = msg + tokens[i] + " ";
@@ -146,7 +146,7 @@ public class ChatClient {
         }
     }
 
-    private boolean connect() {
+    public boolean connect() {
         try {
             this.socket = new Socket(IPAddress, port);
             this.serverOut = socket.getOutputStream();
