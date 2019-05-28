@@ -56,6 +56,7 @@ public class ServerWorker extends Thread {
             }
         }
         System.out.println("Disconnected: " + clientSocket.getInetAddress().toString().substring(1)+":"+clientSocket.getPort());
+        handleLogoff();
         inputStream.close();outputStream.close();clientSocket.close();
     }
 
@@ -142,10 +143,17 @@ public class ServerWorker extends Thread {
     }
 
     private void handleLogin(String[] tokens) throws IOException{
-        if (tokens.length == 3) {
+        if (tokens.length == 2) {
             String login = tokens[1];
-            String password = tokens[2];
-            if ((login.equals("guest") && password.equals("guest") || (login.equals("jacob") && password.equals("jacob")))) {
+            int counter = 0;
+            for (ServerWorker worker: server.getWorkerList()) {
+                if (worker.getLogin() != null) {
+                    if (worker.getLogin().equalsIgnoreCase(login)) {
+                        counter++;
+                    }
+                }
+            }
+            if (counter == 0) {
                 String msg = "ok login\n";
                 send(msg);
                 this.login = login;
@@ -168,12 +176,12 @@ public class ServerWorker extends Thread {
                     }
                 }
             }else {
-                String msg = "Unknown Login \n";
+                String msg = "Name Taken Login \n";
                 send(msg);
                 System.err.println("Login failed for " + login);
             }
         }else {
-            String msg = "Invalid Use of Login: (login Username Password) \n";
+            String msg = "Invalid Use of Login: (login Username) \n";
             send(msg);
         }
     }

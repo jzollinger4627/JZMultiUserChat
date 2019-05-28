@@ -44,7 +44,7 @@ public class ChatClient {
             System.err.println("Connect failed.");
         }else {
             System.out.println("Connect successfull");
-            if (client.login("guest", "guest")) {
+            if (client.login("guest")) {
                 System.out.println("Login successful");
 
                 client.msg("jacob", "Hello World!");
@@ -67,8 +67,8 @@ public class ChatClient {
         serverOut.write(cmd.getBytes());
     }
 
-    public boolean login(String username, String password) throws IOException {
-        String cmd = "login " + username + " " + password + "\n";
+    public boolean login(String username) throws IOException {
+        String cmd = "login " + username + "\n";
         serverOut.write(cmd.getBytes());
 
         String msg = bufferedIn.readLine();
@@ -104,11 +104,6 @@ public class ChatClient {
                     } else if ("offline".equalsIgnoreCase(cmd)) {
                         handleOffline(tokens);
                     } else if (cmd.startsWith("msg")) {
-                        String msg = "";
-                        for (int i=2;i<tokens.length;i++) {
-                            msg = msg + tokens[i] + " ";
-                        }
-                        tokens[2] = msg;
                         handleMessage(tokens);
                     }
                 }
@@ -124,9 +119,12 @@ public class ChatClient {
     }
 
     private void handleMessage(String[] tokens) {
-        String login = tokens[1];
-        String msg = tokens[2];
-
+        String login = tokens[0].substring(tokens[0].indexOf("<")+1,tokens[0].indexOf(">"));
+        String msg = "";
+        System.out.println(tokens);
+        for (int i=1;i<tokens.length;i++) {
+            msg = msg + tokens[i] + " ";
+        }
         for (MessageListener listener: messageListeners) {
             listener.onMessage(login, msg);
         }
